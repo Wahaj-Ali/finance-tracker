@@ -22,8 +22,11 @@ export function AlertsBanner({ stats }: AlertsBannerProps) {
           <div>
             <p className="text-sm font-semibold text-danger">Savings at risk</p>
             <p className="mt-1 text-sm text-muted">
-              Remaining balance ({formatPKR(stats.remaining)}) is below your 10%
-              savings target ({formatPKR(stats.savingsTarget)}). You need{" "}
+              Remaining balance ({formatPKR(stats.remaining)}) is below your{" "}
+              {stats.salary > 0
+                ? Math.round((stats.savingsTarget / stats.salary) * 100)
+                : 10}
+              % savings target ({formatPKR(stats.savingsTarget)}). You need{" "}
               {formatPKR(stats.savingsShortfall)} more to stay on track.
             </p>
           </div>

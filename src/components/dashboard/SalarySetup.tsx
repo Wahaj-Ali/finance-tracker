@@ -1,16 +1,21 @@
 "use client";
 
 import { formatPKR } from "@/lib/format";
-import { CATEGORIES } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
 import { Save } from "lucide-react";
 import { useState } from "react";
 
 type SalarySetupProps = {
+  categories: CategoryConfig[];
   currentSalary: number | null;
   onSave: (salary: number) => Promise<void>;
 };
 
-export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
+export function SalarySetup({
+  categories,
+  currentSalary,
+  onSave,
+}: SalarySetupProps) {
   const [salary, setSalary] = useState(
     currentSalary ? String(currentSalary) : ""
   );
@@ -62,7 +67,7 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
 
       {parsed > 0 && (
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const budget = Math.round((parsed * cat.percentage) / 100);
             return (
               <div

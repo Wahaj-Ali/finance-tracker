@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  getCategoryChartColor,
   getChartTheme,
   useTheme,
 } from "@/components/theme/ThemeProvider";
@@ -24,8 +23,6 @@ type CategoryProgressProps = {
 };
 
 export function CategoryProgress({ categories }: CategoryProgressProps) {
-  const { theme } = useTheme();
-
   return (
     <div className="card p-6">
       <h3 className="mb-1 text-sm font-semibold text-foreground">
@@ -36,15 +33,13 @@ export function CategoryProgress({ categories }: CategoryProgressProps) {
       </p>
 
       <div className="space-y-5">
-        {categories.map((cat) => {
-          const color = getCategoryChartColor(cat.id, theme);
-          return (
+        {categories.map((cat) => (
             <div key={cat.id}>
               <div className="mb-2 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: cat.color }}
                   />
                   <span className="text-foreground">{cat.label}</span>
                   <span className="text-xs text-muted">({cat.percentage}%)</span>
@@ -72,8 +67,7 @@ export function CategoryProgress({ categories }: CategoryProgressProps) {
                 </p>
               )}
             </div>
-          );
-        })}
+          ))}
       </div>
     </div>
   );
@@ -89,9 +83,9 @@ export function CategoryBarChart({ categories }: CategoryProgressProps) {
         name: c.label.split(" ")[0],
         budget: c.budget,
         spent: c.spent,
-        color: getCategoryChartColor(c.id, theme),
+        color: c.color,
       })),
-    [categories, theme]
+    [categories]
   );
 
   return (

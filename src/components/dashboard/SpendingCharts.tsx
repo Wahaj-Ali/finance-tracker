@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  getCategoryChartColor,
   getChartTheme,
   useTheme,
 } from "@/components/theme/ThemeProvider";
@@ -25,9 +24,9 @@ export function SpendingPieChart({ categories }: SpendingPieChartProps) {
         .map((c) => ({
           name: c.label,
           value: c.spent,
-          color: getCategoryChartColor(c.id, theme),
+          color: c.color,
         })),
-    [categories, theme]
+    [categories]
   );
 
   if (data.length === 0) {
@@ -92,12 +91,10 @@ export function SpendingPieChart({ categories }: SpendingPieChartProps) {
 }
 
 export function PredictiveAnalytics({ categories }: SpendingPieChartProps) {
-  const { theme } = useTheme();
-
   const items = categories.map((c) => ({
     label: c.label,
     utilization: Math.min(c.utilization, 100),
-    color: getCategoryChartColor(c.id, theme),
+    color: c.color,
     overspent: c.overspent,
   }));
 
