@@ -1,9 +1,19 @@
-import type { CategoryId } from "@/lib/constants";
-
 export type Profile = {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
+};
+
+export type UserCategory = {
+  id: string;
+  user_id: string;
+  slug: string | null;
+  label: string;
+  color: string;
+  percentage: number;
+  sort_order: number;
+  is_custom: boolean;
+  created_at: string;
 };
 
 export type MonthlyBudget = {
@@ -20,7 +30,7 @@ export type Expense = {
   id: string;
   user_id: string;
   monthly_budget_id: string;
-  category: CategoryId;
+  category_id: string;
   amount: number;
   description: string | null;
   expense_date: string;
@@ -28,7 +38,8 @@ export type Expense = {
 };
 
 export type CategoryStats = {
-  id: CategoryId;
+  id: string;
+  slug: string | null;
   label: string;
   percentage: number;
   color: string;

@@ -1,16 +1,21 @@
 "use client";
 
 import { formatPKR } from "@/lib/format";
-import { CATEGORIES } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
 import { Save } from "lucide-react";
 import { useState } from "react";
 
 type SalarySetupProps = {
+  categories: CategoryConfig[];
   currentSalary: number | null;
   onSave: (salary: number) => Promise<void>;
 };
 
-export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
+export function SalarySetup({
+  categories,
+  currentSalary,
+  onSave,
+}: SalarySetupProps) {
   const [salary, setSalary] = useState(
     currentSalary ? String(currentSalary) : ""
   );
@@ -33,7 +38,7 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
 
   return (
     <div className="card p-6">
-      <h3 className="mb-1 text-sm font-semibold text-white">
+      <h3 className="mb-1 text-sm font-semibold text-foreground">
         Monthly Salary (PKR)
       </h3>
       <p className="mb-4 text-xs text-muted">
@@ -48,12 +53,12 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
           placeholder="e.g. 250000"
-          className="flex-1 rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+          className="input-field flex-1 rounded-xl px-4 py-3 text-sm"
         />
         <button
           onClick={handleSave}
           disabled={loading || parsed <= 0}
-          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-accent-dim disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           {saved ? "Saved!" : "Save"}
@@ -62,15 +67,17 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
 
       {parsed > 0 && (
         <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const budget = Math.round((parsed * cat.percentage) / 100);
             return (
               <div
                 key={cat.id}
-                className="rounded-xl border border-card-border bg-zinc-900/50 px-3 py-2.5"
+                className="rounded-xl border border-card-border bg-surface px-3 py-2.5"
               >
                 <p className="text-[10px] text-muted">{cat.percentage}%</p>
-                <p className="text-xs font-medium text-white">{cat.label.split(" ")[0]}</p>
+                <p className="text-xs font-medium text-foreground">
+                  {cat.label.split(" ")[0]}
+                </p>
                 <p className="text-xs text-accent">{formatPKR(budget)}</p>
               </div>
             );

@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  getChartTheme,
+  useTheme,
+} from "@/components/theme/ThemeProvider";
+import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
@@ -17,6 +21,9 @@ type BudgetRadarChartProps = {
 };
 
 export function BudgetRadarChart({ categories }: BudgetRadarChartProps) {
+  const { theme } = useTheme();
+  const chart = getChartTheme();
+
   const data = categories.map((c) => ({
     category: c.label.split(" ")[0],
     utilization: Math.min(c.utilization, 100),
@@ -27,31 +34,32 @@ export function BudgetRadarChart({ categories }: BudgetRadarChartProps) {
 
   return (
     <div className="card p-6">
-      <h3 className="mb-1 text-sm font-semibold text-white">
+      <h3 className="mb-1 text-sm font-semibold text-foreground">
         Category Utilization
       </h3>
       <p className="mb-2 text-xs text-muted">
         Percentage of budget used per category
       </p>
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={280} key={theme}>
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="#3f3f46" />
+          <PolarGrid stroke={chart.grid} />
           <PolarAngleAxis
             dataKey="category"
-            tick={{ fill: "#71717a", fontSize: 11 }}
+            tick={{ fill: chart.muted, fontSize: 11 }}
           />
           <PolarRadiusAxis
             angle={90}
             domain={[0, 100]}
-            tick={{ fill: "#71717a", fontSize: 10 }}
+            tick={{ fill: chart.muted, fontSize: 10 }}
             tickFormatter={(v) => `${v}%`}
           />
           <Tooltip
             contentStyle={{
-              background: "#18181b",
-              border: "1px solid #27272a",
+              background: chart.tooltipBg,
+              border: `1px solid ${chart.tooltipBorder}`,
               borderRadius: "12px",
               fontSize: "12px",
+              color: "var(--foreground)",
             }}
             formatter={(_, __, props) => {
               const p = props.payload as (typeof data)[0];
@@ -64,8 +72,8 @@ export function BudgetRadarChart({ categories }: BudgetRadarChartProps) {
           <Radar
             name="Utilization"
             dataKey="utilization"
-            stroke="#DFFF00"
-            fill="#DFFF00"
+            stroke={chart.accent}
+            fill={chart.accent}
             fillOpacity={0.25}
             strokeWidth={2}
           />

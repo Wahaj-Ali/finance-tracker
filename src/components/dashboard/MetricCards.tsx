@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCompactPKR, formatPKR } from "@/lib/format";
+import { formatCompactPKR } from "@/lib/format";
 import type { DashboardStats } from "@/types";
 import { BarChart3, PiggyBank, Receipt, TrendingUp } from "lucide-react";
 
@@ -54,7 +54,7 @@ export function MetricCards({ stats }: MetricCardsProps) {
             </div>
           </div>
           <p
-            className={`text-2xl font-bold ${card.alert ? "text-danger" : "text-white"}`}
+            className={`text-2xl font-bold ${card.alert ? "text-danger" : "text-foreground"}`}
           >
             {card.value}
           </p>
@@ -78,11 +78,11 @@ export function MetricCards({ stats }: MetricCardsProps) {
 
           {card.gauge !== undefined && (
             <div className="relative mx-auto mt-4 h-12 w-24 overflow-hidden">
-              <div className="absolute inset-0 rounded-t-full border-[6px] border-zinc-800 border-b-transparent" />
+              <div className="absolute inset-0 rounded-t-full border-[6px] border-[var(--progress-track)] border-b-transparent" />
               <div
                 className="absolute inset-0 origin-bottom rounded-t-full border-[6px] border-accent border-b-transparent transition-all"
                 style={{
-                  clipPath: `polygon(0 100%, 100% 100%, 100% 0, 0 0)`,
+                  clipPath: "polygon(0 100%, 100% 100%, 100% 0, 0 0)",
                   transform: `rotate(${(card.gauge - 0.5) * 180}deg)`,
                 }}
               />

@@ -1,43 +1,69 @@
-export const CATEGORIES = [
+export type CategoryConfig = {
+  id: string;
+  slug: string | null;
+  label: string;
+  color: string;
+  percentage: number;
+  isCustom: boolean;
+  sortOrder: number;
+};
+
+export const DEFAULT_CATEGORY_TEMPLATES: Omit<
+  CategoryConfig,
+  "id" | "isCustom"
+>[] = [
   {
-    id: "household",
+    slug: "household",
     label: "Household Expenses",
-    percentage: 35,
     color: "#DFFF00",
+    percentage: 35,
+    sortOrder: 0,
   },
   {
-    id: "car",
+    slug: "car",
     label: "Car Expenses",
-    percentage: 15,
     color: "#B8E600",
-  },
-  {
-    id: "investments",
-    label: "Investments",
-    percentage: 25,
-    color: "#9ACC00",
-  },
-  {
-    id: "lifestyle",
-    label: "Dine Outs & Shopping",
     percentage: 15,
-    color: "#E5FF4D",
+    sortOrder: 1,
   },
   {
-    id: "savings",
-    label: "Savings / Emergency",
-    percentage: 10,
-    color: "#C4FF00",
+    slug: "investments",
+    label: "Investments",
+    color: "#9ACC00",
+    percentage: 25,
+    sortOrder: 2,
   },
-] as const;
+  {
+    slug: "lifestyle",
+    label: "Dine Outs & Shopping",
+    color: "#E5FF4D",
+    percentage: 15,
+    sortOrder: 3,
+  },
+  {
+    slug: "savings",
+    label: "Savings / Emergency",
+    color: "#C4FF00",
+    percentage: 10,
+    sortOrder: 4,
+  },
+];
 
-export type CategoryId = (typeof CATEGORIES)[number]["id"];
+export const CUSTOM_CATEGORY_COLORS = [
+  "#84cc16",
+  "#22c55e",
+  "#14b8a6",
+  "#06b6d4",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+  "#f97316",
+];
 
-export const CATEGORY_MAP = Object.fromEntries(
-  CATEGORIES.map((c) => [c.id, c])
-) as Record<CategoryId, (typeof CATEGORIES)[number]>;
+export function isTempCategoryId(id: string): boolean {
+  return id.startsWith("temp-");
+}
 
-export const TOTAL_ALLOCATION = CATEGORIES.reduce(
-  (sum, c) => sum + c.percentage,
-  0
-);
+export function createTempCategoryId(): string {
+  return `temp-${crypto.randomUUID()}`;
+}

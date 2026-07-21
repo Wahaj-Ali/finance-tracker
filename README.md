@@ -16,6 +16,7 @@ A Next.js personal finance dashboard for tracking monthly salary, category-based
 - **Dashboard** with metrics, radar chart, bar chart, pie chart, and daily spending trend
 - **Monthly history** — navigate between months; data persisted in Supabase
 - **Google sign-in** via Supabase Auth
+- **Settings page** to customize your own category percentages, add custom categories, and pick colors (stored per user)
 
 ## Setup
 
@@ -28,7 +29,7 @@ npm install
 ### 2. Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) and create a new project.
-2. In **SQL Editor**, run the contents of `supabase/schema.sql`.
+2. In **SQL Editor**, run the contents of `supabase/schema.sql` for a fresh setup. If upgrading an existing database, run migrations in order: `002_user_budget_settings.sql` then **`003_user_categories.sql`** (required for custom categories).
 3. In **Authentication → Providers**, enable **Google** and add your OAuth credentials from [Google Cloud Console](https://console.cloud.google.com/).
 4. In **Authentication → URL Configuration**, set:
    - Site URL: `http://localhost:3000`

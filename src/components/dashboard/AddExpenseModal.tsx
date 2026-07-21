@@ -1,14 +1,16 @@
 "use client";
 
-import { CATEGORIES, type CategoryId } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
+import { CalendarPicker } from "@/components/ui/CalendarPicker";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type AddExpenseModalProps = {
   open: boolean;
   onClose: () => void;
+  categories: CategoryConfig[];
   onSubmit: (data: {
-    category: CategoryId;
+    category_id: string;
     amount: number;
     description: string;
     expense_date: string;
@@ -18,9 +20,10 @@ type AddExpenseModalProps = {
 export function AddExpenseModal({
   open,
   onClose,
+  categories,
   onSubmit,
 }: AddExpenseModalProps) {
-  const [category, setCategory] = useState<CategoryId>("household");
+  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(
@@ -28,6 +31,18 @@ export function AddExpenseModal({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setDate(new Date().toISOString().split("T")[0]);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.find((c) => c.id === categoryId)) {
+      setCategoryId(categories[0].id);
+    }
+  }, [categories, categoryId]);
 
   if (!open) return null;
 
@@ -46,10 +61,20 @@ export function AddExpenseModal({
       return;
     }
 
+    if (!categoryId) {
+      setError("Select a category");
+      return;
+    }
+
+    if (!date) {
+      setError("Select a date");
+      return;
+    }
+
     setLoading(true);
     try {
       await onSubmit({
-        category,
+        category_id: categoryId,
         amount: parsedAmount,
         description: description.trim(),
         expense_date: date,
@@ -65,13 +90,16 @@ export function AddExpenseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="card w-full max-w-md p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "var(--overlay)" }}
+    >
+      <div className="card max-h-[90vh] w-full max-w-md overflow-y-auto p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Add Expense</h2>
+          <h2 className="text-lg font-semibold text-foreground">Add Expense</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted transition hover:bg-zinc-800 hover:text-white"
+            className="rounded-lg p-1.5 text-muted transition hover:bg-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -81,16 +109,21 @@ export function AddExpenseModal({
           <div>
             <label className="mb-1.5 block text-xs text-muted">Category</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as CategoryId)}
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
             >
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.label} ({c.percentage}%)
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs text-muted">Date</label>
+            <CalendarPicker value={date} onChange={setDate} />
           </div>
 
           <div>
@@ -104,7 +137,7 @@ export function AddExpenseModal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 5000"
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
               required
             />
           </div>
@@ -118,18 +151,7 @@ export function AddExpenseModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Grocery shopping, Fuel, Netflix"
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs text-muted">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
               required
             />
           </div>
@@ -138,8 +160,8 @@ export function AddExpenseModal({
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-zinc-950 transition hover:bg-accent-dim disabled:opacity-50"
+            disabled={loading || categories.length === 0}
+            className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim disabled:opacity-50"
           >
             {loading ? "Saving..." : "Add Expense"}
           </button>
