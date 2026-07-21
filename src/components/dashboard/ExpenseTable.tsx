@@ -1,6 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  getCategoryChartColor,
+  useTheme,
+} from "@/components/theme/ThemeProvider";
 import { CATEGORIES, CATEGORY_MAP, type CategoryId } from "@/lib/constants";
 import { formatDate, formatPKR } from "@/lib/format";
 import type { Expense } from "@/types";
@@ -12,6 +16,7 @@ type ExpenseTableProps = {
 };
 
 export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
+  const { theme } = useTheme();
   const [filter, setFilter] = useState<CategoryId | "all">("all");
 
   const sorted = useMemo(
@@ -44,7 +49,7 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
       <div className="card p-6">
         <div className="mb-4 flex items-center gap-2">
           <Receipt className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-white">
+          <h3 className="text-sm font-semibold text-foreground">
             Individual Expenses
           </h3>
         </div>
@@ -62,7 +67,7 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
           <div>
             <div className="flex items-center gap-2">
               <Receipt className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-white">
+              <h3 className="text-sm font-semibold text-foreground">
                 Individual Expenses
               </h3>
             </div>
@@ -80,31 +85,32 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
             onClick={() => setFilter("all")}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
               filter === "all"
-                ? "bg-accent text-zinc-950"
-                : "bg-zinc-800 text-muted hover:text-white"
+                ? "bg-accent text-accent-foreground"
+                : "bg-surface text-muted hover:bg-hover hover:text-foreground"
             }`}
           >
             All ({expenses.length})
           </button>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setFilter(cat.id)}
-              disabled={categoryCounts[cat.id] === 0}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
-                filter === cat.id
-                  ? "text-zinc-950"
-                  : "bg-zinc-800 text-muted hover:text-white"
-              }`}
-              style={
-                filter === cat.id
-                  ? { backgroundColor: cat.color }
-                  : undefined
-              }
-            >
-              {cat.label.split(" ")[0]} ({categoryCounts[cat.id]})
-            </button>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const color = getCategoryChartColor(cat.id, theme);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilter(cat.id)}
+                disabled={categoryCounts[cat.id] === 0}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
+                  filter === cat.id
+                    ? "text-accent-foreground"
+                    : "bg-surface text-muted hover:bg-hover hover:text-foreground"
+                }`}
+                style={
+                  filter === cat.id ? { backgroundColor: color } : undefined
+                }
+              >
+                {cat.label.split(" ")[0]} ({categoryCounts[cat.id]})
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -127,6 +133,7 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
             <tbody>
               {filtered.map((expense) => {
                 const cat = CATEGORY_MAP[expense.category];
+                const color = getCategoryChartColor(cat.id, theme);
                 const label =
                   expense.description?.trim() ||
                   `${cat.label} expense`;
@@ -134,10 +141,10 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
                 return (
                   <tr
                     key={expense.id}
-                    className="border-b border-card-border/50 transition hover:bg-zinc-900/50"
+                    className="border-b border-card-border/50 transition hover:bg-hover/60"
                   >
                     <td className="px-6 py-3.5">
-                      <p className="font-medium text-white">{label}</p>
+                      <p className="font-medium text-foreground">{label}</p>
                       <p className="mt-0.5 text-xs text-muted">
                         Added{" "}
                         {formatDate(expense.created_at.split("T")[0])}
@@ -147,8 +154,8 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
                         style={{
-                          backgroundColor: `${cat.color}20`,
-                          color: cat.color,
+                          backgroundColor: `${color}22`,
+                          color,
                         }}
                       >
                         {cat.label}
@@ -157,13 +164,13 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
                     <td className="px-6 py-3.5 text-muted">
                       {formatDate(expense.expense_date)}
                     </td>
-                    <td className="px-6 py-3.5 text-right font-semibold text-white">
+                    <td className="px-6 py-3.5 text-right font-semibold text-foreground">
                       {formatPKR(Number(expense.amount))}
                     </td>
                     <td className="px-6 py-3.5">
                       <button
                         onClick={() => onDelete(expense.id)}
-                        className="rounded-lg p-1.5 text-muted transition hover:bg-zinc-800 hover:text-danger"
+                        className="rounded-lg p-1.5 text-muted transition hover:bg-hover hover:text-danger"
                         title="Delete expense"
                       >
                         <Trash2 className="h-4 w-4" />

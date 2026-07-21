@@ -15,12 +15,18 @@ export function HeroCard({ stats, salarySet }: HeroCardProps) {
 
   return (
     <div className="card accent-glow relative overflow-hidden p-6 md:p-8">
-      <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-accent/5 blur-3xl" />
-      <div className="absolute -bottom-12 -left-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
+      <div
+        className="absolute -right-8 -top-8 h-40 w-40 rounded-full blur-3xl"
+        style={{ background: "var(--hero-glow)" }}
+      />
+      <div
+        className="absolute -bottom-12 -left-8 h-32 w-32 rounded-full blur-2xl"
+        style={{ background: "var(--hero-glow)" }}
+      />
 
       <div className="relative">
         <p className="text-sm text-muted">Monthly Budget Journey</p>
-        <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
+        <h2 className="mt-2 text-2xl font-bold text-foreground md:text-3xl">
           Track Your Spending Journey
         </h2>
         <p className="mt-2 max-w-lg text-sm text-muted">
@@ -37,7 +43,7 @@ export function HeroCard({ stats, salarySet }: HeroCardProps) {
                 {utilization.toFixed(1)}%
               </span>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-zinc-800">
+            <div className="h-2.5 overflow-hidden rounded-full bg-[var(--progress-track)]">
               <div
                 className="h-full rounded-full bg-accent transition-all duration-500"
                 style={{ width: `${utilization}%` }}
@@ -46,7 +52,7 @@ export function HeroCard({ stats, salarySet }: HeroCardProps) {
             <div className="mt-3 flex gap-6 text-sm">
               <div>
                 <span className="text-muted">Spent </span>
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-foreground">
                   {formatPKR(stats.totalSpent)}
                 </span>
               </div>

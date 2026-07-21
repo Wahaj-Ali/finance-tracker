@@ -1,26 +1,39 @@
 "use client";
 
+import {
+  getCategoryChartColor,
+  getChartTheme,
+  useTheme,
+} from "@/components/theme/ThemeProvider";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatPKR } from "@/lib/format";
 import type { CategoryStats } from "@/types";
+import { useMemo } from "react";
 
 type SpendingPieChartProps = {
   categories: CategoryStats[];
 };
 
 export function SpendingPieChart({ categories }: SpendingPieChartProps) {
-  const data = categories
-    .filter((c) => c.spent > 0)
-    .map((c) => ({
-      name: c.label,
-      value: c.spent,
-      color: c.color,
-    }));
+  const { theme } = useTheme();
+  const chart = getChartTheme();
+
+  const data = useMemo(
+    () =>
+      categories
+        .filter((c) => c.spent > 0)
+        .map((c) => ({
+          name: c.label,
+          value: c.spent,
+          color: getCategoryChartColor(c.id, theme),
+        })),
+    [categories, theme]
+  );
 
   if (data.length === 0) {
     return (
       <div className="card flex h-full min-h-[280px] flex-col p-6">
-        <h3 className="mb-1 text-sm font-semibold text-white">
+        <h3 className="mb-1 text-sm font-semibold text-foreground">
           Spending Distribution
         </h3>
         <p className="flex flex-1 items-center justify-center text-sm text-muted">
@@ -32,11 +45,11 @@ export function SpendingPieChart({ categories }: SpendingPieChartProps) {
 
   return (
     <div className="card p-6">
-      <h3 className="mb-1 text-sm font-semibold text-white">
+      <h3 className="mb-1 text-sm font-semibold text-foreground">
         Spending Distribution
       </h3>
       <p className="mb-2 text-xs text-muted">Where your money is going</p>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={220} key={theme}>
         <PieChart>
           <Pie
             data={data}
@@ -53,10 +66,11 @@ export function SpendingPieChart({ categories }: SpendingPieChartProps) {
           </Pie>
           <Tooltip
             contentStyle={{
-              background: "#18181b",
-              border: "1px solid #27272a",
+              background: chart.tooltipBg,
+              border: `1px solid ${chart.tooltipBorder}`,
               borderRadius: "12px",
               fontSize: "12px",
+              color: "var(--foreground)",
             }}
             formatter={(value) => formatPKR(Number(value))}
           />
@@ -78,16 +92,18 @@ export function SpendingPieChart({ categories }: SpendingPieChartProps) {
 }
 
 export function PredictiveAnalytics({ categories }: SpendingPieChartProps) {
+  const { theme } = useTheme();
+
   const items = categories.map((c) => ({
     label: c.label,
     utilization: Math.min(c.utilization, 100),
-    color: c.color,
+    color: getCategoryChartColor(c.id, theme),
     overspent: c.overspent,
   }));
 
   return (
     <div className="card p-6">
-      <h3 className="mb-1 text-sm font-semibold text-white">
+      <h3 className="mb-1 text-sm font-semibold text-foreground">
         Budget Analytics
       </h3>
       <p className="mb-5 text-xs text-muted">
@@ -104,12 +120,12 @@ export function PredictiveAnalytics({ categories }: SpendingPieChartProps) {
                 {item.utilization.toFixed(0)}%
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--progress-track)]">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${item.utilization}%`,
-                  backgroundColor: item.overspent ? "#ef4444" : item.color,
+                  backgroundColor: item.overspent ? "var(--danger)" : item.color,
                 }}
               />
             </div>

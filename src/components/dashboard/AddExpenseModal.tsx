@@ -65,13 +65,16 @@ export function AddExpenseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "var(--overlay)" }}
+    >
       <div className="card w-full max-w-md p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Add Expense</h2>
+          <h2 className="text-lg font-semibold text-foreground">Add Expense</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted transition hover:bg-zinc-800 hover:text-white"
+            className="rounded-lg p-1.5 text-muted transition hover:bg-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
@@ -83,7 +86,7 @@ export function AddExpenseModal({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as CategoryId)}
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -104,7 +107,7 @@ export function AddExpenseModal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 5000"
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
               required
             />
           </div>
@@ -118,7 +121,7 @@ export function AddExpenseModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Grocery shopping, Fuel, Netflix"
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
               required
             />
           </div>
@@ -129,7 +132,7 @@ export function AddExpenseModal({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+              className="input-field w-full rounded-xl px-4 py-3 text-sm"
               required
             />
           </div>
@@ -139,7 +142,7 @@ export function AddExpenseModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-zinc-950 transition hover:bg-accent-dim disabled:opacity-50"
+            className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim disabled:opacity-50"
           >
             {loading ? "Saving..." : "Add Expense"}
           </button>

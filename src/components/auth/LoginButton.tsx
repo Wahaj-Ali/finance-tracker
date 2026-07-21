@@ -17,7 +17,7 @@ export function LoginButton() {
   return (
     <button
       onClick={handleLogin}
-      className="flex items-center gap-3 rounded-2xl bg-accent px-8 py-4 text-sm font-semibold text-zinc-950 transition hover:bg-accent-dim"
+      className="flex items-center gap-3 rounded-2xl bg-accent px-8 py-4 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim"
     >
       <LogIn className="h-5 w-5" />
       Continue with Google

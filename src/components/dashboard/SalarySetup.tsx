@@ -33,7 +33,7 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
 
   return (
     <div className="card p-6">
-      <h3 className="mb-1 text-sm font-semibold text-white">
+      <h3 className="mb-1 text-sm font-semibold text-foreground">
         Monthly Salary (PKR)
       </h3>
       <p className="mb-4 text-xs text-muted">
@@ -48,12 +48,12 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
           value={salary}
           onChange={(e) => setSalary(e.target.value)}
           placeholder="e.g. 250000"
-          className="flex-1 rounded-xl border border-card-border bg-zinc-900 px-4 py-3 text-sm text-white outline-none focus:border-accent"
+          className="input-field flex-1 rounded-xl px-4 py-3 text-sm"
         />
         <button
           onClick={handleSave}
           disabled={loading || parsed <= 0}
-          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-accent-dim disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim disabled:opacity-50"
         >
           <Save className="h-4 w-4" />
           {saved ? "Saved!" : "Save"}
@@ -67,10 +67,12 @@ export function SalarySetup({ currentSalary, onSave }: SalarySetupProps) {
             return (
               <div
                 key={cat.id}
-                className="rounded-xl border border-card-border bg-zinc-900/50 px-3 py-2.5"
+                className="rounded-xl border border-card-border bg-surface px-3 py-2.5"
               >
                 <p className="text-[10px] text-muted">{cat.percentage}%</p>
-                <p className="text-xs font-medium text-white">{cat.label.split(" ")[0]}</p>
+                <p className="text-xs font-medium text-foreground">
+                  {cat.label.split(" ")[0]}
+                </p>
                 <p className="text-xs text-accent">{formatPKR(budget)}</p>
               </div>
             );
