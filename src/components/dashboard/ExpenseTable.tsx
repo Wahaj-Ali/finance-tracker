@@ -1,23 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  getCategoryChartColor,
-  useTheme,
-} from "@/components/theme/ThemeProvider";
-import { CATEGORIES, CATEGORY_MAP, type CategoryId } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
 import { formatDate, formatPKR } from "@/lib/format";
 import type { Expense } from "@/types";
 import { Receipt, Trash2 } from "lucide-react";
 
 type ExpenseTableProps = {
+  categories: CategoryConfig[];
   expenses: Expense[];
   onDelete: (id: string) => void;
 };
 
-export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
-  const { theme } = useTheme();
-  const [filter, setFilter] = useState<CategoryId | "all">("all");
+export function ExpenseTable({
+  categories,
+  expenses,
+  onDelete,
+}: ExpenseTableProps) {
+  const [filter, setFilter] = useState<string | "all">("all");
+
+  const categoryMap = useMemo(
+    () => Object.fromEntries(categories.map((c) => [c.id, c])),
+    [categories]
+  );
 
   const sorted = useMemo(
     () =>
@@ -32,17 +37,19 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
   const filtered =
     filter === "all"
       ? sorted
-      : sorted.filter((expense) => expense.category === filter);
+      : sorted.filter((expense) => expense.category_id === filter);
 
   const categoryCounts = useMemo(() => {
     const counts = Object.fromEntries(
-      CATEGORIES.map((c) => [c.id, 0])
-    ) as Record<CategoryId, number>;
+      categories.map((c) => [c.id, 0])
+    ) as Record<string, number>;
     for (const expense of expenses) {
-      counts[expense.category]++;
+      if (expense.category_id in counts) {
+        counts[expense.category_id]++;
+      }
     }
     return counts;
-  }, [expenses]);
+  }, [expenses, categories]);
 
   if (expenses.length === 0) {
     return (
@@ -75,7 +82,8 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
               {expenses.length} expense{expenses.length !== 1 ? "s" : ""} this
               month
               {filter !== "all" &&
-                ` · ${filtered.length} in ${CATEGORY_MAP[filter].label}`}
+                categoryMap[filter] &&
+                ` · ${filtered.length} in ${categoryMap[filter].label}`}
             </p>
           </div>
         </div>
@@ -91,26 +99,23 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
           >
             All ({expenses.length})
           </button>
-          {CATEGORIES.map((cat) => {
-            const color = getCategoryChartColor(cat.id, theme);
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setFilter(cat.id)}
-                disabled={categoryCounts[cat.id] === 0}
-                className={`rounded-full px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
-                  filter === cat.id
-                    ? "text-accent-foreground"
-                    : "bg-surface text-muted hover:bg-hover hover:text-foreground"
-                }`}
-                style={
-                  filter === cat.id ? { backgroundColor: color } : undefined
-                }
-              >
-                {cat.label.split(" ")[0]} ({categoryCounts[cat.id]})
-              </button>
-            );
-          })}
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setFilter(cat.id)}
+              disabled={categoryCounts[cat.id] === 0}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition disabled:opacity-40 ${
+                filter === cat.id
+                  ? "text-accent-foreground"
+                  : "bg-surface text-muted hover:bg-hover hover:text-foreground"
+              }`}
+              style={
+                filter === cat.id ? { backgroundColor: cat.color } : undefined
+              }
+            >
+              {cat.label.split(" ")[0]} ({categoryCounts[cat.id]})
+            </button>
+          ))}
         </div>
       </div>
 
@@ -132,11 +137,10 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
             </thead>
             <tbody>
               {filtered.map((expense) => {
-                const cat = CATEGORY_MAP[expense.category];
-                const color = getCategoryChartColor(cat.id, theme);
+                const cat = categoryMap[expense.category_id];
                 const label =
                   expense.description?.trim() ||
-                  `${cat.label} expense`;
+                  `${cat?.label ?? "Unknown"} expense`;
 
                 return (
                   <tr
@@ -151,15 +155,19 @@ export function ExpenseTable({ expenses, onDelete }: ExpenseTableProps) {
                       </p>
                     </td>
                     <td className="px-6 py-3.5">
-                      <span
-                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
-                        style={{
-                          backgroundColor: `${color}22`,
-                          color,
-                        }}
-                      >
-                        {cat.label}
-                      </span>
+                      {cat ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
+                          style={{
+                            backgroundColor: `${cat.color}22`,
+                            color: cat.color,
+                          }}
+                        >
+                          {cat.label}
+                        </span>
+                      ) : (
+                        <span className="text-muted">Unknown</span>
+                      )}
                     </td>
                     <td className="px-6 py-3.5 text-muted">
                       {formatDate(expense.expense_date)}
