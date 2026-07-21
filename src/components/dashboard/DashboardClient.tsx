@@ -1,11 +1,12 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { CategoryConfig } from "@/lib/constants";
 import { buildDashboardStats, getDailySpendingData } from "@/lib/finance";
 import type { Expense, MonthlyBudget, Profile } from "@/types";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { AppShell } from "@/components/layout/AppShell";
 import { HeroCard } from "@/components/dashboard/HeroCard";
 import { MetricCards } from "@/components/dashboard/MetricCards";
 import { AlertsBanner } from "@/components/dashboard/AlertsBanner";
@@ -19,12 +20,12 @@ import {
 import { ExpenseTable } from "@/components/dashboard/ExpenseTable";
 import { AddExpenseModal } from "@/components/dashboard/AddExpenseModal";
 import { SalarySetup } from "@/components/dashboard/SalarySetup";
-import type { CategoryId } from "@/lib/constants";
 
 type DashboardClientProps = {
   profile: Profile | null;
   initialBudget: MonthlyBudget | null;
   initialExpenses: Expense[];
+  categories: CategoryConfig[];
   year: number;
   month: number;
   userId: string;
@@ -34,10 +35,12 @@ export function DashboardClient({
   profile,
   initialBudget,
   initialExpenses,
+  categories,
   year: initialYear,
   month: initialMonth,
   userId,
 }: DashboardClientProps) {
+  const searchParams = useSearchParams();
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [budget, setBudget] = useState<MonthlyBudget | null>(initialBudget);
@@ -50,6 +53,12 @@ export function DashboardClient({
   const canGoNext =
     year < now.getFullYear() ||
     (year === now.getFullYear() && month < now.getMonth() + 1);
+
+  useEffect(() => {
+    if (searchParams.get("add") === "1") {
+      setModalOpen(true);
+    }
+  }, [searchParams]);
 
   const fetchMonthData = useCallback(
     async (y: number, m: number) => {
@@ -89,11 +98,8 @@ export function DashboardClient({
 
   const salary = budget ? Number(budget.salary_pkr) : 0;
   const stats = useMemo(
-    () =>
-      salary > 0
-        ? buildDashboardStats(salary, expenses, year, month)
-        : buildDashboardStats(0, expenses, year, month),
-    [salary, expenses, year, month]
+    () => buildDashboardStats(salary, expenses, year, month, categories),
+    [salary, expenses, year, month, categories]
   );
 
   const dailyData = useMemo(
@@ -149,7 +155,7 @@ export function DashboardClient({
   };
 
   const handleAddExpense = async (data: {
-    category: CategoryId;
+    category_id: string;
     amount: number;
     description: string;
     expense_date: string;
@@ -161,7 +167,7 @@ export function DashboardClient({
       .insert({
         user_id: userId,
         monthly_budget_id: budget.id,
-        category: data.category,
+        category_id: data.category_id,
         amount: data.amount,
         description: data.description || null,
         expense_date: data.expense_date,
@@ -180,67 +186,66 @@ export function DashboardClient({
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar onAddExpense={() => setModalOpen(true)} />
+    <>
+      <AppShell
+        profile={profile}
+        onAddExpense={() => setModalOpen(true)}
+        header={{
+          year,
+          month,
+          onPrevMonth: handlePrevMonth,
+          onNextMonth: handleNextMonth,
+          canGoNext,
+        }}
+      >
+        {loading && (
+          <div className="mb-4 text-xs text-muted">Loading...</div>
+        )}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <Header
-          userName={profile?.full_name ?? null}
-          avatarUrl={profile?.avatar_url ?? null}
-          year={year}
-          month={month}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          canGoNext={canGoNext}
-        />
+        <div className="mx-auto max-w-[1400px] space-y-6">
+          <AlertsBanner stats={stats} />
 
-        <main className="min-h-0 flex-1 overflow-y-auto p-6 md:p-8">
-          {loading && (
-            <div className="mb-4 text-xs text-muted">Loading...</div>
+          <SalarySetup
+            categories={categories}
+            currentSalary={budget ? Number(budget.salary_pkr) : null}
+            onSave={handleSaveSalary}
+          />
+
+          <HeroCard stats={stats} salarySet={salary > 0} />
+
+          {salary > 0 && (
+            <>
+              <MetricCards stats={stats} />
+
+              <ExpenseTable
+                categories={categories}
+                expenses={expenses}
+                onDelete={handleDeleteExpense}
+              />
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                  <CategoryProgress categories={stats.categories} />
+                </div>
+                <BudgetRadarChart categories={stats.categories} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <CategoryBarChart categories={stats.categories} />
+                <SpendingPieChart categories={stats.categories} />
+                <PredictiveAnalytics categories={stats.categories} />
+              </div>
+
+              <DailySpendingChart data={dailyData} />
+            </>
           )}
-
-          <div className="mx-auto max-w-[1400px] space-y-6">
-            <AlertsBanner stats={stats} />
-
-            <SalarySetup
-              currentSalary={budget ? Number(budget.salary_pkr) : null}
-              onSave={handleSaveSalary}
-            />
-
-            <HeroCard stats={stats} salarySet={salary > 0} />
-
-            {salary > 0 && (
-              <>
-                <MetricCards stats={stats} />
-
-                <ExpenseTable
-                  expenses={expenses}
-                  onDelete={handleDeleteExpense}
-                />
-
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  <div className="lg:col-span-2">
-                    <CategoryProgress categories={stats.categories} />
-                  </div>
-                  <BudgetRadarChart categories={stats.categories} />
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                  <CategoryBarChart categories={stats.categories} />
-                  <SpendingPieChart categories={stats.categories} />
-                  <PredictiveAnalytics categories={stats.categories} />
-                </div>
-
-                <DailySpendingChart data={dailyData} />
-              </>
-            )}
-          </div>
-        </main>
-      </div>
+        </div>
+      </AppShell>
 
       <AddExpenseModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        categories={categories}
         onSubmit={async (data) => {
           if (!budget) {
             throw new Error("Set your monthly salary before adding expenses.");
@@ -248,6 +253,6 @@ export function DashboardClient({
           await handleAddExpense(data);
         }}
       />
-    </div>
+    </>
   );
 }

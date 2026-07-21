@@ -5,18 +5,24 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { formatMonthYear } from "@/lib/format";
 
 type HeaderProps = {
+  title?: string;
+  subtitle?: string;
   userName: string | null;
   avatarUrl: string | null;
-  year: number;
-  month: number;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  canGoNext: boolean;
+  showMonthNav?: boolean;
+  year?: number;
+  month?: number;
+  onPrevMonth?: () => void;
+  onNextMonth?: () => void;
+  canGoNext?: boolean;
 };
 
 export function Header({
+  title = "Dashboard",
+  subtitle,
   userName,
   avatarUrl,
+  showMonthNav = true,
   year,
   month,
   onPrevMonth,
@@ -26,34 +32,40 @@ export function Header({
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-card-border bg-card/80 px-8 py-5 backdrop-blur-md">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <div className="mt-1 flex items-center gap-2">
-          <button
-            onClick={onPrevMonth}
-            className="rounded-lg p-1 text-muted transition hover:bg-hover hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <p className="text-sm text-muted">{formatMonthYear(year, month)}</p>
-          <button
-            onClick={onNextMonth}
-            disabled={!canGoNext}
-            className="rounded-lg p-1 text-muted transition hover:bg-hover hover:text-foreground disabled:opacity-30"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        {showMonthNav && year && month && onPrevMonth && onNextMonth ? (
+          <div className="mt-1 flex items-center gap-2">
+            <button
+              onClick={onPrevMonth}
+              className="rounded-lg p-1 text-muted transition hover:bg-hover hover:text-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <p className="text-sm text-muted">{formatMonthYear(year, month)}</p>
+            <button
+              onClick={onNextMonth}
+              disabled={!canGoNext}
+              className="rounded-lg p-1 text-muted transition hover:bg-hover hover:text-foreground disabled:opacity-30"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="glass hidden items-center gap-2 rounded-xl px-4 py-2.5 md:flex">
-          <Search className="h-4 w-4 text-muted" />
-          <input
-            type="text"
-            placeholder="Search transactions..."
-            className="w-48 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
-          />
-        </div>
+        {showMonthNav && (
+          <div className="glass hidden items-center gap-2 rounded-xl px-4 py-2.5 md:flex">
+            <Search className="h-4 w-4 text-muted" />
+            <input
+              type="text"
+              placeholder="Search transactions..."
+              className="w-48 bg-transparent text-sm text-foreground outline-none placeholder:text-muted"
+            />
+          </div>
+        )}
 
         <ThemeToggle />
 
