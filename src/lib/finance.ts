@@ -1,24 +1,28 @@
-import { CATEGORIES, type CategoryId } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
 import type { CategoryStats, DashboardStats, Expense } from "@/types";
 import {
   differenceInCalendarDays,
   getDaysInMonth,
   startOfMonth,
 } from "date-fns";
+import { getSavingsPercentage } from "@/lib/budget-settings";
 
 export function getBudgetAmount(salary: number, percentage: number): number {
   return Math.round((salary * percentage) / 100);
 }
 
 export function getSpentByCategory(
-  expenses: Expense[]
-): Record<CategoryId, number> {
+  expenses: Expense[],
+  categories: CategoryConfig[]
+): Record<string, number> {
   const totals = Object.fromEntries(
-    CATEGORIES.map((c) => [c.id, 0])
-  ) as Record<CategoryId, number>;
+    categories.map((c) => [c.id, 0])
+  ) as Record<string, number>;
 
   for (const expense of expenses) {
-    totals[expense.category] += Number(expense.amount);
+    if (expense.category_id in totals) {
+      totals[expense.category_id] += Number(expense.amount);
+    }
   }
 
   return totals;
@@ -26,18 +30,20 @@ export function getSpentByCategory(
 
 export function buildCategoryStats(
   salary: number,
-  expenses: Expense[]
+  expenses: Expense[],
+  categories: CategoryConfig[]
 ): CategoryStats[] {
-  const spentByCategory = getSpentByCategory(expenses);
+  const spentByCategory = getSpentByCategory(expenses, categories);
 
-  return CATEGORIES.map((category) => {
+  return categories.map((category) => {
     const budget = getBudgetAmount(salary, category.percentage);
-    const spent = spentByCategory[category.id];
+    const spent = spentByCategory[category.id] ?? 0;
     const remaining = budget - spent;
     const utilization = budget > 0 ? (spent / budget) * 100 : 0;
 
     return {
       id: category.id,
+      slug: category.slug,
       label: category.label,
       percentage: category.percentage,
       color: category.color,
@@ -54,15 +60,17 @@ export function buildDashboardStats(
   salary: number,
   expenses: Expense[],
   year: number,
-  month: number
+  month: number,
+  categories: CategoryConfig[]
 ): DashboardStats {
-  const categories = buildCategoryStats(salary, expenses);
-  const totalSpent = categories.reduce((sum, c) => sum + c.spent, 0);
+  const categoryStats = buildCategoryStats(salary, expenses, categories);
+  const totalSpent = categoryStats.reduce((sum, c) => sum + c.spent, 0);
   const remaining = salary - totalSpent;
-  const savingsTarget = getBudgetAmount(salary, 10);
+  const savingsPct = getSavingsPercentage(categories);
+  const savingsTarget = getBudgetAmount(salary, savingsPct);
   const savingsShortfall = Math.max(0, savingsTarget - remaining);
   const savingsAlert = remaining < savingsTarget;
-  const overspentCategories = categories.filter((c) => c.overspent);
+  const overspentCategories = categoryStats.filter((c) => c.overspent);
 
   const monthStart = startOfMonth(new Date(year, month - 1));
   const daysInMonth = getDaysInMonth(monthStart);
@@ -72,12 +80,6 @@ export function buildDashboardStats(
   const daysElapsed = isCurrentMonth
     ? differenceInCalendarDays(today, monthStart) + 1
     : daysInMonth;
-
-  const dailyTotals = new Map<string, number>();
-  for (const expense of expenses) {
-    const key = expense.expense_date;
-    dailyTotals.set(key, (dailyTotals.get(key) ?? 0) + Number(expense.amount));
-  }
 
   const avgDailySpend =
     daysElapsed > 0 ? Math.round(totalSpent / daysElapsed) : 0;
@@ -90,7 +92,7 @@ export function buildDashboardStats(
     savingsShortfall,
     savingsAlert,
     overspentCategories,
-    categories,
+    categories: categoryStats,
     expenseCount: expenses.length,
     avgDailySpend,
     daysInMonth,
@@ -98,7 +100,11 @@ export function buildDashboardStats(
   };
 }
 
-export function getDailySpendingData(expenses: Expense[], year: number, month: number) {
+export function getDailySpendingData(
+  expenses: Expense[],
+  year: number,
+  month: number
+) {
   const daysInMonth = getDaysInMonth(new Date(year, month - 1));
   const dailyMap = new Map<number, number>();
 

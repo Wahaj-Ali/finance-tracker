@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { buildCategoryConfig } from "@/lib/budget-settings";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import type { Expense } from "@/types";
@@ -20,19 +22,24 @@ export default async function DashboardPage({ searchParams }: Props) {
   const year = params.year ? parseInt(params.year) : now.getFullYear();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: categoryRows }, { data: budget }] =
+    await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+      supabase
+        .from("user_categories")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("monthly_budgets")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("year", year)
+        .eq("month", month)
+        .maybeSingle(),
+    ]);
 
-  const { data: budget } = await supabase
-    .from("monthly_budgets")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("year", year)
-    .eq("month", month)
-    .maybeSingle();
+  const categories = buildCategoryConfig(categoryRows);
 
   let expenses: Expense[] = [];
 
@@ -47,13 +54,16 @@ export default async function DashboardPage({ searchParams }: Props) {
   }
 
   return (
-    <DashboardClient
-      profile={profile}
-      initialBudget={budget}
-      initialExpenses={expenses ?? []}
-      year={year}
-      month={month}
-      userId={user.id}
-    />
+    <Suspense fallback={null}>
+      <DashboardClient
+        profile={profile}
+        initialBudget={budget}
+        initialExpenses={expenses}
+        categories={categories}
+        year={year}
+        month={month}
+        userId={user.id}
+      />
+    </Suspense>
   );
 }
