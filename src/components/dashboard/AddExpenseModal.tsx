@@ -1,14 +1,16 @@
 "use client";
 
-import { CATEGORIES, type CategoryId } from "@/lib/constants";
+import type { CategoryConfig } from "@/lib/constants";
+import { CalendarPicker } from "@/components/ui/CalendarPicker";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type AddExpenseModalProps = {
   open: boolean;
   onClose: () => void;
+  categories: CategoryConfig[];
   onSubmit: (data: {
-    category: CategoryId;
+    category_id: string;
     amount: number;
     description: string;
     expense_date: string;
@@ -18,9 +20,10 @@ type AddExpenseModalProps = {
 export function AddExpenseModal({
   open,
   onClose,
+  categories,
   onSubmit,
 }: AddExpenseModalProps) {
-  const [category, setCategory] = useState<CategoryId>("household");
+  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(
@@ -28,6 +31,18 @@ export function AddExpenseModal({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setDate(new Date().toISOString().split("T")[0]);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.find((c) => c.id === categoryId)) {
+      setCategoryId(categories[0].id);
+    }
+  }, [categories, categoryId]);
 
   if (!open) return null;
 
@@ -46,10 +61,20 @@ export function AddExpenseModal({
       return;
     }
 
+    if (!categoryId) {
+      setError("Select a category");
+      return;
+    }
+
+    if (!date) {
+      setError("Select a date");
+      return;
+    }
+
     setLoading(true);
     try {
       await onSubmit({
-        category,
+        category_id: categoryId,
         amount: parsedAmount,
         description: description.trim(),
         expense_date: date,
@@ -69,7 +94,7 @@ export function AddExpenseModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "var(--overlay)" }}
     >
-      <div className="card w-full max-w-md p-6">
+      <div className="card max-h-[90vh] w-full max-w-md overflow-y-auto p-6">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-foreground">Add Expense</h2>
           <button
@@ -84,16 +109,21 @@ export function AddExpenseModal({
           <div>
             <label className="mb-1.5 block text-xs text-muted">Category</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as CategoryId)}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
               className="input-field w-full rounded-xl px-4 py-3 text-sm"
             >
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.label} ({c.percentage}%)
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs text-muted">Date</label>
+            <CalendarPicker value={date} onChange={setDate} />
           </div>
 
           <div>
@@ -126,22 +156,11 @@ export function AddExpenseModal({
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs text-muted">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="input-field w-full rounded-xl px-4 py-3 text-sm"
-              required
-            />
-          </div>
-
           {error && <p className="text-sm text-danger">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || categories.length === 0}
             className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground transition hover:bg-accent-dim disabled:opacity-50"
           >
             {loading ? "Saving..." : "Add Expense"}
